@@ -37,4 +37,26 @@ public class RoomController {
         RoomResponseDTO response = roomService.getRoomById(id);
         return ResponseEntity.ok(response);
     }
+    @GetMapping("/hello")
+    public String hello() {
+        return "Hello from Spring Boot!";
+    }
+
+    @GetMapping("/getRooms")
+    public ResponseEntity<List<RoomResponseDTO>> getAllRooms() {
+        List<RoomResponseDTO> rooms = roomService.getAllRooms();
+        return ResponseEntity.ok(rooms);
+    }
+
+    @PutMapping("/updateRoom/{id}")
+    public ResponseEntity<RoomResponseDTO> updateRoom(@PathVariable Long id, @RequestBody RoomRequestDTO roomRequestDTO) {
+        RoomResponseDTO updatedRoom = roomService.updateRoom(id, roomRequestDTO);
+        return ResponseEntity.ok(updatedRoom);
+    }
+
+    @DeleteMapping("/deleteRoom/{id}")
+    public ResponseEntity<String> deleteRoom(@PathVariable Long id) {
+        roomService.deleteRoom(id);
+        return ResponseEntity.ok("Room deleted successfully");
+    }
 }

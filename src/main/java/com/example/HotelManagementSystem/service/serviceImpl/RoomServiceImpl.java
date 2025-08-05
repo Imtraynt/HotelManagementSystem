@@ -31,6 +31,7 @@ public class RoomServiceImpl implements RoomService {
         room.setRoomNumber(roomDTO.getRoomNumber());
         room.setStatus(roomDTO.getStatus() != null ? roomDTO.getStatus() : "AVAILABLE");
         room.setPrice(roomDTO.getPrice());
+        room.setRoomType(roomDTO.getRoomType());
         room = roomRepository.save(room);
 
         return mapToResponseDTO(room);
@@ -50,6 +51,7 @@ public class RoomServiceImpl implements RoomService {
             room.setRoomNumber(dto.getRoomNumber());
             room.setStatus(dto.getStatus() != null ? dto.getStatus() : "AVAILABLE");
             room.setPrice(dto.getPrice());
+            room.setRoomType(dto.getRoomType());
             return room;
         }).collect(Collectors.toList());
 
@@ -68,12 +70,62 @@ public class RoomServiceImpl implements RoomService {
         return mapToResponseDTO(room);
     }
 
+
+    @Override
+    public List<RoomResponseDTO> getAllRooms() {
+        List<Room> rooms = roomRepository.findAll();
+        return rooms.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
+
+    @Override
+    public RoomResponseDTO updateRoom(Long id, RoomRequestDTO roomRequestDTO) {
+        if (id == null || roomRequestDTO == null) {
+            throw new IllegalArgumentException("ID and Room data are required");
+        }
+
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found with ID: " + id));
+
+        // Update fields
+        if (roomRequestDTO.getRoomNumber() != null) {
+            room.setRoomNumber(roomRequestDTO.getRoomNumber());
+        }
+        if (roomRequestDTO.getStatus() != null) {
+            room.setStatus(roomRequestDTO.getStatus());
+        }
+        if (roomRequestDTO.getPrice() != null) {
+            room.setPrice(roomRequestDTO.getPrice());
+        }
+        if (roomRequestDTO.getRoomType() != null) {
+            room.setRoomType(roomRequestDTO.getRoomType());
+        }
+
+        Room updatedRoom = roomRepository.save(room);
+        return mapToResponseDTO(updatedRoom);
+    }
+
+    @Override
+    public void deleteRoom(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("ID cannot be null");
+        }
+        Room room = roomRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Room not found with ID: " + id));
+
+        roomRepository.delete(room);
+    }
+
+
+
     private RoomResponseDTO mapToResponseDTO(Room room) {
         RoomResponseDTO response = new RoomResponseDTO();
         response.setId(room.getId());
         response.setRoomNumber(room.getRoomNumber());
         response.setStatus(room.getStatus());
         response.setPrice(room.getPrice());
+        response.setRoomType(room.getRoomType());
         return response;
     }
 }

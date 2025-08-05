@@ -45,7 +45,7 @@ public class BookingServiceImpl implements BookingService {
         }
 
         List<Room> unavailableRooms = rooms.stream()
-                .filter(room -> !"AVAILABLE".equals(room.getStatus()))
+                    .filter(room -> !"available".equals(room.getStatus()))
                 .collect(Collectors.toList());
         if (!unavailableRooms.isEmpty()) {
             throw new IllegalArgumentException("Rooms " + unavailableRooms.stream().map(Room::getId).collect(Collectors.toList()) + " are not available");
@@ -56,10 +56,14 @@ public class BookingServiceImpl implements BookingService {
         booking.setCheckInTime(bookingDTO.getCheckInTime() != null ? bookingDTO.getCheckInTime() : LocalDateTime.now());
         booking.setCheckOutTime(bookingDTO.getCheckOutTime() != null ? bookingDTO.getCheckOutTime() : LocalDateTime.now().plusDays(1));
         booking.setGuestName(bookingDTO.getGuestName() != null ? bookingDTO.getGuestName() : "Guest");
+
+        booking.setStatus("Confirmed");  // Default status
+        booking.setBookingDate(LocalDateTime.now());
+
         booking = bookingRepository.save(booking);
 
         rooms.forEach(room -> {
-            room.setStatus("OCCUPIED");
+            room.setStatus("Occupy");
             roomRepository.save(room);
         });
 
@@ -121,6 +125,8 @@ public class BookingServiceImpl implements BookingService {
         response.setCheckInTime(booking.getCheckInTime());
         response.setCheckOutTime(booking.getCheckOutTime());
         response.setGuestName(booking.getGuestName());
+        response.setStatus(booking.getStatus());
+        response.setBookingDate(booking.getBookingDate());
         return response;
     }
 }

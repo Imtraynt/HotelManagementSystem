@@ -4,6 +4,7 @@ public class RoomRequestDTO {
     private String roomNumber;
     private String status;
     private Double price;
+    private String roomType;
 
     public RoomRequestDTO() {}
 
@@ -13,4 +14,6 @@ public class RoomRequestDTO {
     public void setStatus(String status) { this.status = status; }
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
+    public String getRoomType() {return roomType;}
+    public void setRoomType(String room_type) {this.roomType = room_type;}
 }

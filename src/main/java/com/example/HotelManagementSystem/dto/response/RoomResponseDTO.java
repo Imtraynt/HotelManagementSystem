@@ -5,6 +5,7 @@ public class RoomResponseDTO {
     private String roomNumber;
     private String status;
     private Double price;
+    private String roomType;
 
     public RoomResponseDTO() {}
 
@@ -16,4 +17,6 @@ public class RoomResponseDTO {
     public void setStatus(String status) { this.status = status; }
     public Double getPrice() { return price; }
     public void setPrice(Double price) { this.price = price; }
+    public String getRoomType() {return roomType;}
+    public void setRoomType(String roomType) {this.roomType = roomType;}
 }

@@ -9,6 +9,8 @@ public class BookingResponseDTO {
     private LocalDateTime checkInTime;
     private LocalDateTime checkOutTime;
     private String guestName;
+    private String status;
+    private LocalDateTime bookingDate;
 
     public BookingResponseDTO() {}
 
@@ -22,4 +24,20 @@ public class BookingResponseDTO {
     public void setCheckOutTime(LocalDateTime checkOutTime) { this.checkOutTime = checkOutTime; }
     public String getGuestName() { return guestName; }
     public void setGuestName(String guestName) { this.guestName = guestName; }
+
+    public LocalDateTime getBookingDate() {
+        return bookingDate;
+    }
+
+    public void setBookingDate(LocalDateTime bookingDate) {
+        this.bookingDate = bookingDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
 }

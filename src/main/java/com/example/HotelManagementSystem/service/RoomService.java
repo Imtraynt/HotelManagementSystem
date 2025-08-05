@@ -8,4 +8,9 @@ public interface RoomService {
     RoomResponseDTO createRoom(RoomRequestDTO roomDTO);
     List<RoomResponseDTO> createManyRooms(List<RoomRequestDTO> roomDTOs);
     RoomResponseDTO getRoomById(Long id);
+
+    List<RoomResponseDTO> getAllRooms();
+
+    RoomResponseDTO updateRoom(Long id, RoomRequestDTO roomRequestDTO);
+    void deleteRoom(Long id);
 }

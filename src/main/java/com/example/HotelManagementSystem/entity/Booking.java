@@ -22,16 +22,20 @@ public class Booking {
     private LocalDateTime checkInTime;
     private LocalDateTime checkOutTime;
     private String guestName;
+    private String status;
+    private LocalDateTime bookingDate;
 
     public Booking() {
         // No-args constructor
     }
 
-    public Booking(List<Room> rooms, LocalDateTime checkInTime, LocalDateTime checkOutTime, String guestName) {
+    public Booking(List<Room> rooms, LocalDateTime checkInTime, LocalDateTime checkOutTime, String guestName,String status, LocalDateTime bookingDate) {
         this.rooms = rooms;
         this.checkInTime = checkInTime;
         this.checkOutTime = checkOutTime;
         this.guestName = guestName;
+        this.status = status;
+        this.bookingDate = bookingDate;
     }
 
     public Long getId() {
@@ -72,5 +76,21 @@ public class Booking {
 
     public void setGuestName(String guestName) {
         this.guestName = guestName;
+    }
+
+    public LocalDateTime getBookingDate() {
+        return bookingDate;
+    }
+
+    public void setBookingDate(LocalDateTime bookingDate) {
+        this.bookingDate = bookingDate;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
     }
 }

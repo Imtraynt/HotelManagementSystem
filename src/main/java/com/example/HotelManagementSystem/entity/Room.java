@@ -20,11 +20,15 @@ public class Room {
     @Column(name = "price")
     private Double price;
 
-    public Room(Long id, String roomNumber, String status, Double price) {
+    @Column(name = "room_type")  // ✅ New Column
+    private String roomType;
+
+    public Room(Long id, String roomNumber, String status, Double price, String roomType) {
         this.id = id;
         this.roomNumber = roomNumber;
         this.status = status;
         this.price = price;
+        this.roomType = roomType;
     }
 
     public Room() {
@@ -62,4 +66,8 @@ public class Room {
     public void setPrice(Double price) {
         this.price = price;
     }
+
+    public String getRoomType() {return roomType;}
+
+    public void setRoomType(String roomType) {this.roomType = roomType;}
 }
