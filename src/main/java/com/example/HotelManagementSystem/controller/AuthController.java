@@ -27,9 +27,17 @@ public class AuthController {
     }
 
     @PostMapping("/register")
-    public ResponseEntity<String> register(@RequestParam String username, @RequestParam String password, @RequestParam String role) {
+    public ResponseEntity<Map<String, String>> register(@RequestParam String username, @RequestParam String password, @RequestParam String role) {
+        if (userService.findByUsername(username).isPresent()) {
+            Map<String, String> errorResponse = new HashMap<>();
+            errorResponse.put("message", "username already taken");
+            return ResponseEntity.ok(errorResponse);
+        }
+
         User user = userService.registerUser(username, password, role);
-        return ResponseEntity.ok("User registered with ID: " + user.getId());
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "User registered with ID: " + user.getId());
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/login")
