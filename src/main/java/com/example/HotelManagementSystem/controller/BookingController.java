@@ -2,7 +2,6 @@ package com.example.HotelManagementSystem.controller;
 
 import com.example.HotelManagementSystem.dto.request.BookingRequestDTO;
 import com.example.HotelManagementSystem.dto.response.BookingResponseDTO;
-import com.example.HotelManagementSystem.entity.Booking;
 import com.example.HotelManagementSystem.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
@@ -28,14 +27,14 @@ public class BookingController {
     }
 
     @PostMapping("/checkIn")
-    public ResponseEntity<BookingResponseDTO> checkIn(@RequestBody @RequestParam Long bookingId) {
+    public ResponseEntity<BookingResponseDTO> checkIn(@RequestParam Long bookingId) {
         BookingResponseDTO response = bookingService.checkIn(bookingId);
         return ResponseEntity.ok(response);
     }
 
     @DeleteMapping("/checkOut")
-    public ResponseEntity<Booking> checkOut(@RequestParam Long bookingId) {
-        Booking response = bookingService.checkOut(bookingId); // Assuming refined version
+    public ResponseEntity<BookingResponseDTO> checkOut(@RequestParam Long bookingId) {
+        BookingResponseDTO response = bookingService.checkOut(bookingId);
         return ResponseEntity.ok(response);
     }
 

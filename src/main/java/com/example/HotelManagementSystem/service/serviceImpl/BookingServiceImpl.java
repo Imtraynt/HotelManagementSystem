@@ -9,6 +9,7 @@ import com.example.HotelManagementSystem.repository.RoomRepository;
 import com.example.HotelManagementSystem.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,6 +28,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingResponseDTO createBooking(BookingRequestDTO bookingDTO) {
         if (bookingDTO == null) {
             throw new IllegalArgumentException("Booking request cannot be null");
@@ -67,6 +69,7 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
+    @Transactional
     public BookingResponseDTO checkIn(Long bookingId) {
         if (bookingId == null) {
             throw new IllegalArgumentException("Booking ID cannot be null");
@@ -85,28 +88,37 @@ public class BookingServiceImpl implements BookingService {
                 room.setStatus("OCCUPIED");
                 roomRepository.save(room);
             });
+            // Save the updated booking to reflect the check-in state
+            booking.setCheckInTime(LocalDateTime.now());
+            bookingRepository.save(booking);
         }
         return mapToResponseDTO(booking, booking.getRooms().stream().map(Room::getId).collect(Collectors.toList()));
     }
 
     @Override
-    public Booking checkOut(Long bookingId) {
+    @Transactional
+    public BookingResponseDTO checkOut(Long bookingId) {
         if (bookingId == null) {
             throw new IllegalArgumentException("Booking ID cannot be null");
         }
         Booking booking = bookingRepository.findById(bookingId)
                 .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+        List<Long> roomIds = booking.getRooms().stream().map(Room::getId).collect(Collectors.toList());
         if (booking.getRooms() != null) {
             booking.getRooms().forEach(room -> {
                 room.setStatus("AVAILABLE");
                 roomRepository.save(room);
             });
         }
+        // Update check-out time before deletion
+        booking.setCheckOutTime(LocalDateTime.now());
+        BookingResponseDTO response = mapToResponseDTO(booking, roomIds);
         bookingRepository.delete(booking);
-        return booking;
+        return response;
     }
 
     @Override
+    @Transactional
     public List<BookingResponseDTO> createManyBookings(List<BookingRequestDTO> bookingDTOs) {
         if (bookingDTOs == null || bookingDTOs.isEmpty()) {
             throw new IllegalArgumentException("Booking list cannot be null or empty");
