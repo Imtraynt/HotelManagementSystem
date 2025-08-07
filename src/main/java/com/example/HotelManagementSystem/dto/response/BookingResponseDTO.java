@@ -6,11 +6,13 @@ import java.util.List;
 public class BookingResponseDTO {
     private Long id;
     private List<Long> roomIds;
+    private List<RoomInfoDTO> rooms;
     private LocalDateTime checkInTime;
     private LocalDateTime checkOutTime;
     private String guestName;
     private String status;
     private LocalDateTime bookingDate;
+
 
     public BookingResponseDTO() {}
 
@@ -18,6 +20,15 @@ public class BookingResponseDTO {
     public void setId(Long id) { this.id = id; }
     public List<Long> getRoomIds() { return roomIds; }
     public void setRoomIds(List<Long> roomIds) { this.roomIds = roomIds; }
+
+    public List<RoomInfoDTO> getRooms() {
+        return rooms;
+    }
+
+    public void setRooms(List<RoomInfoDTO> rooms) {
+        this.rooms = rooms;
+    }
+
     public LocalDateTime getCheckInTime() { return checkInTime; }
     public void setCheckInTime(LocalDateTime checkInTime) { this.checkInTime = checkInTime; }
     public LocalDateTime getCheckOutTime() { return checkOutTime; }

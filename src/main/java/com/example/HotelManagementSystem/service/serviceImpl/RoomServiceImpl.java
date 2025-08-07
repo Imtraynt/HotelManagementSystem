@@ -29,7 +29,7 @@ public class RoomServiceImpl implements RoomService {
 
         Room room = new Room();
         room.setRoomNumber(roomDTO.getRoomNumber());
-        room.setStatus(roomDTO.getStatus() != null ? roomDTO.getStatus() : "AVAILABLE");
+        room.setStatus(roomDTO.getStatus() != null ? roomDTO.getStatus() : "available");
         room.setPrice(roomDTO.getPrice());
         room.setRoomType(roomDTO.getRoomType());
         room = roomRepository.save(room);
@@ -70,6 +70,13 @@ public class RoomServiceImpl implements RoomService {
         return mapToResponseDTO(room);
     }
 
+    @Override
+    public List<RoomResponseDTO> getAvailableRooms() {
+        List<Room> rooms = roomRepository.findByStatus("available");
+        return rooms.stream()
+                .map(this::mapToResponseDTO)
+                .collect(Collectors.toList());
+    }
 
     @Override
     public List<RoomResponseDTO> getAllRooms() {

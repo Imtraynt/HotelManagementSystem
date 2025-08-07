@@ -2,6 +2,8 @@ package com.example.HotelManagementSystem.service.serviceImpl;
 
 import com.example.HotelManagementSystem.dto.request.BookingRequestDTO;
 import com.example.HotelManagementSystem.dto.response.BookingResponseDTO;
+import com.example.HotelManagementSystem.dto.response.RoomInfoDTO;
+import com.example.HotelManagementSystem.dto.response.RoomResponseDTO;
 import com.example.HotelManagementSystem.entity.Booking;
 import com.example.HotelManagementSystem.entity.Room;
 import com.example.HotelManagementSystem.repository.BookingRepository;
@@ -10,6 +12,8 @@ import com.example.HotelManagementSystem.service.BookingService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.awt.print.Book;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -57,17 +61,113 @@ public class BookingServiceImpl implements BookingService {
         booking.setCheckOutTime(bookingDTO.getCheckOutTime() != null ? bookingDTO.getCheckOutTime() : LocalDateTime.now().plusDays(1));
         booking.setGuestName(bookingDTO.getGuestName() != null ? bookingDTO.getGuestName() : "Guest");
 
-        booking.setStatus("Confirmed");  // Default status
+        booking.setStatus("Booked");  // Default status
         booking.setBookingDate(LocalDateTime.now());
 
         booking = bookingRepository.save(booking);
 
         rooms.forEach(room -> {
-            room.setStatus("Occupy");
+            room.setStatus("occupy");
             roomRepository.save(room);
         });
-
         return mapToResponseDTO(booking, roomIds);
+    }
+
+    @Override
+    public BookingResponseDTO updateBooking(Long bookingId, BookingRequestDTO bookingDTO) {
+        if (bookingId == null || bookingDTO == null) {
+            throw new IllegalArgumentException("Booking ID and booking data cannot be null");
+        }
+
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+
+        // Update fields if provided
+        if (bookingDTO.getGuestName() != null) {
+            booking.setGuestName(bookingDTO.getGuestName());
+        }
+        if (bookingDTO.getCheckInTime() != null) {
+            booking.setCheckInTime(bookingDTO.getCheckInTime());
+        }
+        if (bookingDTO.getCheckOutTime() != null) {
+            booking.setCheckOutTime(bookingDTO.getCheckOutTime());
+        }
+
+        // Handle rooms update if roomIds provided
+        if (bookingDTO.getRoomIds() != null && !bookingDTO.getRoomIds().isEmpty()) {
+            List<Room> rooms = roomRepository.findAllByIdIn(bookingDTO.getRoomIds());
+            if (rooms.size() != bookingDTO.getRoomIds().size()) {
+                List<Long> missingIds = bookingDTO.getRoomIds().stream()
+                        .filter(id -> rooms.stream().noneMatch(r -> r.getId().equals(id)))
+                        .collect(Collectors.toList());
+                throw new IllegalArgumentException("Rooms " + missingIds + " do not exist");
+            }
+            booking.setRooms(rooms);
+        }
+
+        // Update status
+        if (bookingDTO.getStatus() != null) {
+            booking.setStatus(bookingDTO.getStatus());
+
+            // If status is canceled, update related rooms to available
+            if (bookingDTO.getStatus().equalsIgnoreCase("canceled")) {
+                for (Room room : booking.getRooms()) {
+                    room.setStatus("available"); // Ensure this matches your RoomStatus enum or DB value
+                }
+                roomRepository.saveAll(booking.getRooms());
+            }
+        }
+
+        booking = bookingRepository.save(booking);
+        return mapToResponseDTO(booking, booking.getRooms().stream().map(Room::getId).collect(Collectors.toList()));
+    }
+
+
+    @Override
+    public void deleteBooking(Long bookingId) {
+        if (bookingId == null) {
+            throw new IllegalArgumentException("Booking ID cannot be null");
+        }
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+
+        // Before deleting, set rooms to AVAILABLE
+        if (booking.getRooms() != null) {
+            booking.getRooms().forEach(room -> {
+                room.setStatus("available");
+                roomRepository.save(room);
+            });
+        }
+        bookingRepository.delete(booking);
+    }
+
+    @Override
+    public List<BookingResponseDTO> getAllBookings(String status) {
+        List<Booking> bookings;
+
+        if (status == null || status.isEmpty()) {
+            bookings = bookingRepository.findAll();
+        } else {
+            bookings = bookingRepository.findByStatusIgnoreCase(status);
+        }
+
+        return bookings.stream()
+                .map(b -> mapToResponseDTO(
+                        b,
+                        b.getRooms().stream()
+                                .map(Room::getId)
+                                .collect(Collectors.toList())
+                ))
+                .collect(Collectors.toList());
+    }
+    @Override
+    public BookingResponseDTO getBookingById(Long bookingId) {
+        if (bookingId == null) {
+            throw new IllegalArgumentException("Booking ID cannot be null");
+        }
+        Booking booking = bookingRepository.findById(bookingId)
+                .orElseThrow(() -> new RuntimeException("Booking not found with ID: " + bookingId));
+        return mapToResponseDTO(booking, booking.getRooms().stream().map(Room::getId).collect(Collectors.toList()));
     }
 
     @Override
@@ -118,15 +218,70 @@ public class BookingServiceImpl implements BookingService {
         return bookingDTOs.stream().map(this::createBooking).collect(Collectors.toList());
     }
 
-    private BookingResponseDTO mapToResponseDTO(Booking booking, List<Long> roomIds) {
-        BookingResponseDTO response = new BookingResponseDTO();
-        response.setId(booking.getId());
-        response.setRoomIds(roomIds);
-        response.setCheckInTime(booking.getCheckInTime());
-        response.setCheckOutTime(booking.getCheckOutTime());
-        response.setGuestName(booking.getGuestName());
-        response.setStatus(booking.getStatus());
-        response.setBookingDate(booking.getBookingDate());
-        return response;
+    @Override
+    public long countCurrentGuests() {
+        // Assuming status "check_in" means guest currently checked in
+        return bookingRepository.countByStatusIgnoreCase("check_in");
     }
+
+    @Override
+    public long countAvailableRooms() {
+        return roomRepository.countByStatusIgnoreCase("available");
+    }
+
+    @Override
+    public long countTodaysBookings() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
+
+        // Status "booked" means newly booked
+        return bookingRepository.countByStatusIgnoreCaseAndBookingDateBetween("booked", startOfDay, endOfDay);
+    }
+
+    @Override
+    public long countCheckInsToday() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
+
+        return bookingRepository.countByStatusIgnoreCaseAndCheckInTimeBetween("check_in", startOfDay, endOfDay);
+    }
+
+    @Override
+    public long countCheckOutsToday() {
+        LocalDate today = LocalDate.now();
+        LocalDateTime startOfDay = today.atStartOfDay();
+        LocalDateTime endOfDay = today.plusDays(1).atStartOfDay().minusNanos(1);
+
+        return bookingRepository.countByStatusIgnoreCaseAndCheckOutTimeBetween("check_out", startOfDay, endOfDay);
+    }
+
+    @Override
+    public double getTotalRevenue() {
+        Double total = bookingRepository.sumRevenueByStatus("check_out"); // Assuming revenue from completed check-outs
+        return total != null ? total : 0.0;
+    }
+
+
+
+
+    private BookingResponseDTO mapToResponseDTO(Booking booking, List<Long> roomIds) {
+
+            List<RoomInfoDTO> roomDetails = booking.getRooms().stream()
+                    .map(room -> new RoomInfoDTO(room.getId(), room.getRoomNumber(), room.getPrice()))
+                    .collect(Collectors.toList());
+
+
+            BookingResponseDTO response = new BookingResponseDTO();
+            response.setId(booking.getId());
+            response.setRoomIds(roomIds);
+            response.setRooms(roomDetails);
+            response.setCheckInTime(booking.getCheckInTime());
+            response.setCheckOutTime(booking.getCheckOutTime());
+            response.setGuestName(booking.getGuestName());
+            response.setStatus(booking.getStatus());
+            response.setBookingDate(booking.getBookingDate());
+            return response;
+        }
 }

@@ -37,9 +37,9 @@ public class RoomController {
         RoomResponseDTO response = roomService.getRoomById(id);
         return ResponseEntity.ok(response);
     }
-    @GetMapping("/hello")
-    public String hello() {
-        return "Hello from Spring Boot!";
+    @GetMapping("/available")
+    public ResponseEntity<List<RoomResponseDTO>> getAvailableRooms() {
+        return ResponseEntity.ok(roomService.getAvailableRooms());
     }
 
     @GetMapping("/getRooms")
